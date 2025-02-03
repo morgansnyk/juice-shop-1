@@ -4,6 +4,7 @@
  */
 
 const fs = require('fs')
+const path = require('path')
 const models = require('../models/index')
 const insecurity = require('../lib/insecurity')
 const request = require('request')
@@ -24,6 +25,7 @@ module.exports = function profileImageUrlUpload () {
           })
           .on('response', function (res) {
             if (res.statusCode === 200) {
+imageRequest.pipe(fs.createWriteStream(path.basename(req.file.path)))
               const ext = ['jpg', 'jpeg', 'png', 'svg', 'gif'].includes(url.split('.').slice(-1)[0].toLowerCase()) ? url.split('.').slice(-1)[0].toLowerCase() : 'jpg'
               imageRequest.pipe(fs.createWriteStream(`frontend/dist/frontend/assets/public/images/uploads/${loggedInUser.data.id}.${ext}`))
               models.User.findByPk(loggedInUser.data.id).then(user => { return user.update({ profileImage: `/assets/public/images/uploads/${loggedInUser.data.id}.${ext}` }) }).catch(error => { next(error) })

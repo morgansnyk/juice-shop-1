@@ -5,6 +5,7 @@
 
 const utils = require('../lib/utils')
 const fs = require('fs')
+const path = require('path')
 const models = require('../models/index')
 const insecurity = require('../lib/insecurity')
 const logger = require('../lib/logger')
@@ -17,6 +18,7 @@ module.exports = function fileUpload () {
     const uploadedFileType = fileType(buffer)
     if (uploadedFileType !== null && utils.startsWith(uploadedFileType.mime, 'image')) {
       const loggedInUser = insecurity.authenticatedUsers.get(req.cookies.token)
+fs.open('frontend/dist/frontend/assets/public/images/uploads/' + path.basename(uploadedFilePath), 'w', function (err, fd) {
       if (loggedInUser) {
         fs.open(`frontend/dist/frontend/assets/public/images/uploads/${loggedInUser.data.id}.${uploadedFileType.ext}`, 'w', function (err, fd) {
           if (err) logger.warn('Error opening file: ' + err.message)
