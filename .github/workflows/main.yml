@@ -1,0 +1,56 @@
+name: Snyk SCA, Code, IaC and Container CLI monitor example
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    name: Test and build
+    environment: snyk-npm
+    runs-on: ubuntu-latest
+  
+    strategy:
+      matrix:
+        node-version: [16.x] # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          
+#Install Snyk, auth snyk and Snyk to HTML
+#For information about the required commands for generating an HTML report, see https://github.com/snyk/snyk-to-html
+      - name: Setup Snyk + snyk-to-html
+        run: |
+          npm install snyk -g
+          npm install snyk-to-html -g
+          snyk auth ${{secrets.SNYK_AUTH}}
+
+#Run Snyk Open Source Test, can be used for blocking
+#Exporting to file to store on pipeline with Snyk2HTML
+      - name: Snyk Open Source Test, can add flags to control limits for failure
+        run: |
+          #snyk test 
+          snyk test --json | snyk-to-html -o results-opensource.html
+          continue-on-error: true
+#Send results to Snyk Platform
+      - name: Snyk Open Source monitor 
+        run: |
+          snyk monitor 
+#Snyk Code Test
+      - name: Snyk Code # Remove || true to fail if there are vulnerabilities
+        run: |
+          snyk code --json | snyk-to-html -o results-code.html
+          continue-on-error: true
+#snyk code send results to Snyk Platform
+      - name: Snyk Code Test send results to Snyk
+        run: |
+          REPO_NAME=$(basename ${{ github.repository }})
+          snyk code test --report --project-name="$REPO_NAME"
+          continue-on-error: true
