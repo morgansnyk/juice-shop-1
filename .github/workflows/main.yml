@@ -14,16 +14,23 @@ jobs:
     
     strategy:
       matrix:
-        node-version: [16.x] # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+        node-version: [16.x]
 
     steps:
       - uses: actions/checkout@v2
-      
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+      - name: Cache Node Modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm # or node_modules, depending on where npm install puts dependencies
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Install dependencies
+        run: npm install
           
       # Install Snyk, auth snyk and Snyk to HTML
       - name: Setup Snyk + snyk-to-html
