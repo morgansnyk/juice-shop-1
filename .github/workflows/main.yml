@@ -11,46 +11,63 @@ jobs:
     name: Test and build
     environment: snyk-npm
     runs-on: ubuntu-latest
-  
+    
     strategy:
       matrix:
         node-version: [16.x] # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
       - uses: actions/checkout@v2
+      
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
           
-#Install Snyk, auth snyk and Snyk to HTML
-#For information about the required commands for generating an HTML report, see https://github.com/snyk/snyk-to-html
+      # Install Snyk, auth snyk and Snyk to HTML
       - name: Setup Snyk + snyk-to-html
         run: |
           npm install snyk -g
           npm install snyk-to-html -g
           snyk auth ${{secrets.SNYK_AUTH}}
+          # Create a directory to hold the reports
+          mkdir -p snyk-reports 
 
-#Run Snyk Open Source Test, can be used for blocking
-#Exporting to file to store on pipeline with Snyk2HTML
-      - name: Snyk Open Source Test, can add flags to control limits for failure
+# --- Snyk Open Source (SCA) ---
+
+      - name: Snyk Open Source Test and HTML Report
         run: |
-          #snyk test 
-          snyk test --json | snyk-to-html -o results-opensource.html
-          continue-on-error: true
-#Send results to Snyk Platform
-      - name: Snyk Open Source monitor 
+          snyk test --json > snyk-reports/oss-results.json || true
+          snyk-to-html -i snyk-reports/oss-results.json -o snyk-reports/results-opensource.html
+        continue-on-error: true
+        
+      - name: Snyk Open Source Monitor (Send results to Snyk Platform)
         run: |
           snyk monitor 
-#Snyk Code Test
-      - name: Snyk Code # Remove || true to fail if there are vulnerabilities
+        continue-on-error: true
+
+# --- Snyk Code (SAST) ---
+
+      - name: Snyk Code Test, Publish, and HTML Report
+        # This single step now handles all Snyk Code requirements
         run: |
-          snyk code --json | snyk-to-html -o results-code.html
-          continue-on-error: true
-#snyk code send results to Snyk Platform
-      - name: Snyk Code Test send results to Snyk
-        run: |
+          # Extract just the repository name from the owner/repo-name format
           REPO_NAME=$(basename ${{ github.repository }})
-          snyk code test --report --project-name="$REPO_NAME"
-          continue-on-error: true
+          PROJECT_NAME="$REPO_NAME-code"
+          
+          # 1. Scan, publish results to Snyk UI (--report), and save JSON
+          snyk code test --report --project-name="$PROJECT_NAME" --json-file=snyk-reports/code-results.json || true
+          
+          # 2. Generate the HTML report
+          snyk-to-html -i snyk-reports/code-results.json -o snyk-reports/results-code.html
+        continue-on-error: true
+        
+# --- Artifact Upload (Combined) ---
+      
+      - name: Upload Snyk Reports as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: Snyk-Security-Reports
+          # Upload the entire folder containing all reports
+          path: snyk-reports/
