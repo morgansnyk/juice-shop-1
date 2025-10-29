@@ -63,10 +63,11 @@ jobs:
           REPO_NAME=$(basename ${{ github.repository }})
           PROJECT_NAME="$REPO_NAME-code"
           
-          # 1. Scan, publish results to Snyk UI (--report), and save JSON
-          snyk code test --report --project-name="$PROJECT_NAME" --json-file=snyk-reports/code-results.json || true
+          # 1. Scan, publish results to Snyk UI (--report)
+          snyk code test --report --project-name="$PROJECT_NAME" || true
           
-          # 2. Generate the HTML report
+      - name: Snyk Code Test, Publish, and HTML Report   
+          snyk code test --json-file=snyk-reports/code-results.json
           snyk-to-html -i snyk-reports/code-results.json -o snyk-reports/results-code.html
         continue-on-error: true
         
