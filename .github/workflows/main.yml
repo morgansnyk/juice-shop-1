@@ -56,14 +56,19 @@ jobs:
 
 # --- Snyk Code (SAST) ---
 
-      - name: Snyk Code Test, Report, Publish, and HTML Generation
+      - name: Snyk Code Test, Report (Send results to Snyk Platform) 
         run: |
           # Extract just the repository name from the owner/repo-name format
           REPO_NAME=$(basename ${{ github.repository }})
           PROJECT_NAME="$REPO_NAME-code"
       
-          snyk code test --report --project-name="$PROJECT_NAME" --json | tee snyk-reports/code-results-raw.json || true
-          
+          snyk code test --report --project-name="$PROJECT_NAME" 
+        
+        continue-on-error: true
+        
+      - name: Snyk Code Test and HTML report
+        run: |
+          snyk code test --json | tee snyk-reports/code-results-raw.json || true
           snyk-to-html -i snyk-reports/code-results-raw.json -o snyk-reports/results-code.html
         continue-on-error: false
         
