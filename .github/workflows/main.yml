@@ -47,7 +47,7 @@ jobs:
         run: |
           snyk test --json > snyk-reports/oss-results.json || true
           snyk-to-html -i snyk-reports/oss-results.json -o snyk-reports/results-opensource.html
-        continue-on-error: true
+        continue-on-error: false
         
       - name: Snyk Open Source Monitor (Send results to Snyk Platform)
         run: |
