@@ -65,7 +65,7 @@ jobs:
           snyk code test --report --project-name="$PROJECT_NAME" --json | tee snyk-reports/code-results-raw.json || true
           
           snyk-to-html -i snyk-reports/code-results-raw.json -o snyk-reports/results-code.html
-        continue-on-error: true
+        continue-on-error: false
         
 # --- Artifact Upload (Combined) ---
       
