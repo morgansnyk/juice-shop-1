@@ -39,17 +39,22 @@ export class OrderHistoryComponent implements OnInit {
   public tableColumns = ['product', 'price', 'quantity', 'total price', 'review']
   public orders: Order[] = []
   public emptyState: boolean = true
+  public noOrdersPlaced: boolean = true
+  public searchQuery: string = ''
+  public statusFilter: string = ''
 
   constructor (private router: Router, private dialog: MatDialog, private orderHistoryService: OrderHistoryService, private basketService: BasketService, private productService: ProductService, private ngZone: NgZone) { }
 
   ngOnInit () {
-    this.orderHistoryService.get().subscribe((orders) => {
+    this.loadOrders()
+  }
+
+  loadOrders () {
+    this.orderHistoryService.get(this.searchQuery || undefined, this.statusFilter || undefined).subscribe((orders) => {
       orders = orders.reverse()
-      if (orders.length === 0) {
-        this.emptyState = true
-      } else {
-        this.emptyState = false
-      }
+      this.orders = []
+      this.noOrdersPlaced = !this.searchQuery && !this.statusFilter && orders.length === 0
+      this.emptyState = orders.length === 0
       for (const order of orders) {
         const products: StrippedProduct[] = []
         for (const product of order.products) {
@@ -69,7 +74,17 @@ export class OrderHistoryComponent implements OnInit {
           delivered: order.delivered
         })
       }
-    },(err) => console.log(err))
+    }, (err) => console.log(err))
+  }
+
+  searchOrders () {
+    this.loadOrders()
+  }
+
+  clearSearch () {
+    this.searchQuery = ''
+    this.statusFilter = ''
+    this.loadOrders()
   }
 
   showDetail (id: number) {
@@ -89,12 +104,12 @@ export class OrderHistoryComponent implements OnInit {
           productData: element
         }
       })
-    },(err) => console.log(err))
+    }, (err) => console.log(err))
   }
 
   openConfirmationPDF (orderId) {
     const redirectUrl = this.basketService.hostServer + '/ftp/order_' + orderId + '.pdf'
-    window.open(redirectUrl,'_blank')
+    window.open(redirectUrl, '_blank')
   }
 
   trackOrder (orderId) {

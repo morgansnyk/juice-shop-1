@@ -44,6 +44,48 @@ describe('/rest/order-history', () => {
           })
       })
   })
+
+  it('GET own previous orders filtered by product name search', () => {
+    return frisby.post(REST_URL + '/user/login', {
+      headers: jsonHeader,
+      body: {
+        email: 'admin@' + config.get('application.domain'),
+        password: 'admin123'
+      }
+    })
+      .expect('status', 200)
+      .then(({ json: jsonLogin }) => {
+        return frisby.get(REST_URL + '/order-history?q=Apple', {
+          headers: { Authorization: 'Bearer ' + jsonLogin.authentication.token, 'content-type': 'application/json' }
+        })
+          .expect('status', 200)
+          .then(({ json }) => {
+            expect(json.data.length).toBe(1)
+            expect(json.data[0].products[0].name).toBe('Apple Juice (1000ml)')
+          })
+      })
+  })
+
+  it('GET own previous orders filtered by delivery status', () => {
+    return frisby.post(REST_URL + '/user/login', {
+      headers: jsonHeader,
+      body: {
+        email: 'admin@' + config.get('application.domain'),
+        password: 'admin123'
+      }
+    })
+      .expect('status', 200)
+      .then(({ json: jsonLogin }) => {
+        return frisby.get(REST_URL + '/order-history?status=delivered', {
+          headers: { Authorization: 'Bearer ' + jsonLogin.authentication.token, 'content-type': 'application/json' }
+        })
+          .expect('status', 200)
+          .then(({ json }) => {
+            expect(json.data.length).toBe(1)
+            expect(json.data[0].delivered).toBe(true)
+          })
+      })
+  })
 })
 
 describe('/rest/order-history/orders', () => {

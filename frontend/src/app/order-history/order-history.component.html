@@ -7,6 +7,29 @@
       <div class="heading mat-elevation-z6">
          <div class="heading-main">{{"LABEL_ORDER_HISTORY" | translate}}</div>
       </div>
+      <div class="search-bar mat-elevation-z6" fxLayout="row" fxLayoutGap="16px" fxLayout.lt-md="column" fxLayoutAlign="start center">
+         <mat-form-field fxFlex="grow" appearance="outline">
+            <mat-label translate>SEARCH_ORDERS_PLACEHOLDER</mat-label>
+            <input matInput [(ngModel)]="searchQuery" (keyup.enter)="searchOrders()"
+                   [attr.aria-label]="'SEARCH_ORDERS_PLACEHOLDER' | translate"
+                   placeholder="{{ 'SEARCH_ORDERS_PLACEHOLDER' | translate }}">
+            <button *ngIf="searchQuery" matSuffix mat-icon-button aria-label="Clear search" (click)="clearSearch()">
+               <mat-icon>close</mat-icon>
+            </button>
+         </mat-form-field>
+         <mat-form-field appearance="outline">
+            <mat-label translate>LABEL_STATUS</mat-label>
+            <mat-select [(ngModel)]="statusFilter" (selectionChange)="searchOrders()">
+               <mat-option value="">{{ 'SEARCH_ORDERS_STATUS_ALL' | translate }}</mat-option>
+               <mat-option value="delivered">{{ 'SEARCH_ORDERS_STATUS_DELIVERED' | translate }}</mat-option>
+               <mat-option value="in-transit">{{ 'SEARCH_ORDERS_STATUS_IN_TRANSIT' | translate }}</mat-option>
+            </mat-select>
+         </mat-form-field>
+         <button mat-raised-button color="accent" (click)="searchOrders()" aria-label="Search orders">
+            <mat-icon>search</mat-icon>
+            {{ 'NAV_SEARCH' | translate }}
+         </button>
+      </div>
       <div *ngIf="!emptyState; else emptyResult" fxLayout="column" fxLayoutGap="20px">
          <div *ngFor="let order of orders">
             <div class="mat-elevation-z6 table-container custom-slate">
@@ -91,8 +114,11 @@
              </span>
            </mat-card-title>
            <mat-card-content>
-             <span class="noResultText" translate>
+             <span *ngIf="noOrdersPlaced" class="noResultText" translate>
                NO_ORDERS_PLACED
+             </span>
+             <span *ngIf="!noOrdersPlaced" class="noResultText" translate>
+               EMPTY_SEARCH_RESULT
              </span>
            </mat-card-content>
          </mat-card>
