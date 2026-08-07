@@ -57,7 +57,9 @@ jobs:
 # --- Snyk Secrets ---
 
       - name: Snyk Secrets Test
-        run: snyk secrets test --severity-threshold=low
+        run: |
+          REPO_NAME=$(basename ${{ github.repository }})
+          snyk secrets test --severity-threshold=low --report --target-name="$REPO_NAME-secrets"
         continue-on-error: false
 
 # --- Snyk Code (SAST) ---
