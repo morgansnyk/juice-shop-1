@@ -54,6 +54,14 @@ jobs:
           snyk monitor 
         continue-on-error: true
 
+# --- Snyk Secrets ---
+
+      - name: Snyk Secrets Test
+        run: |
+          REPO_NAME=$(basename ${{ github.repository }})
+          snyk secrets test --severity-threshold=low --report --target-name="$REPO_NAME-secrets"
+        continue-on-error: false
+
 # --- Snyk Code (SAST) ---
 
       - name: Snyk Code Test, Report (Send results to Snyk Platform) 
@@ -68,7 +76,7 @@ jobs:
         
       - name: Snyk Code Test and HTML report
         run: |
-          snyk code test --json | tee snyk-reports/code-results-raw.json || true
+          snyk code test --json > snyk-reports/code-results-raw.json
           snyk-to-html -i snyk-reports/code-results-raw.json -o snyk-reports/results-code.html
         continue-on-error: false
         
