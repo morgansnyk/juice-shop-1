@@ -5,7 +5,7 @@
 
 import { environment } from '../../environments/environment'
 import { Injectable } from '@angular/core'
-import { HttpClient } from '@angular/common/http'
+import { HttpClient, HttpParams } from '@angular/common/http'
 import { catchError, map } from 'rxjs/operators'
 
 @Injectable({
@@ -18,8 +18,15 @@ export class OrderHistoryService {
 
   constructor (private http: HttpClient) { }
 
-  get () {
-    return this.http.get(this.host).pipe(map((response: any) => response.data), catchError((err) => { throw err }))
+  get (query?: string, status?: string) {
+    let params = new HttpParams()
+    if (query) {
+      params = params.set('q', query)
+    }
+    if (status) {
+      params = params.set('status', status)
+    }
+    return this.http.get(this.host, { params }).pipe(map((response: any) => response.data), catchError((err) => { throw err }))
   }
 
   getAll () {

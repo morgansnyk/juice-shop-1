@@ -25,6 +25,9 @@ import { MatIconModule } from '@angular/material/icon'
 import { MatTooltipModule } from '@angular/material/tooltip'
 import { MatDialog, MatDialogModule } from '@angular/material/dialog'
 import { MatExpansionModule } from '@angular/material/expansion'
+import { FormsModule } from '@angular/forms'
+import { MatSelectModule } from '@angular/material/select'
+import { MatInputModule } from '@angular/material/input'
 
 describe('AccountingComponent', () => {
   let component: OrderHistoryComponent
@@ -58,7 +61,10 @@ describe('AccountingComponent', () => {
         MatIconModule,
         MatTooltipModule,
         MatDialogModule,
-        MatExpansionModule
+        MatExpansionModule,
+        FormsModule,
+        MatSelectModule,
+        MatInputModule
       ],
       providers: [
         { provide: ProductService, useValue: productService },
@@ -82,9 +88,34 @@ describe('AccountingComponent', () => {
 
   it('should make emptyState true and hold no orders when get Order History gives empty response', () => {
     orderHistoryService.get.and.returnValue(of([]))
-    component.ngOnInit()
+    component.loadOrders()
     expect(component.emptyState).toBe(true)
+    expect(component.noOrdersPlaced).toBe(true)
     expect(component.orders).toEqual([])
+  })
+
+  it('should show no search results message when search returns empty', () => {
+    orderHistoryService.get.and.returnValue(of([]))
+    component.searchQuery = 'nonexistent'
+    component.loadOrders()
+    expect(component.emptyState).toBe(true)
+    expect(component.noOrdersPlaced).toBe(false)
+  })
+
+  it('should call get with search query when searchOrders is invoked', () => {
+    component.searchQuery = 'Apple'
+    component.statusFilter = 'delivered'
+    component.searchOrders()
+    expect(orderHistoryService.get).toHaveBeenCalledWith('Apple', 'delivered')
+  })
+
+  it('should clear search and reload orders when clearSearch is invoked', () => {
+    component.searchQuery = 'test'
+    component.statusFilter = 'delivered'
+    component.clearSearch()
+    expect(component.searchQuery).toBe('')
+    expect(component.statusFilter).toBe('')
+    expect(orderHistoryService.get).toHaveBeenCalledWith(undefined, undefined)
   })
 
   it('should make emptyState false when get Order History gives non empty response', () => {

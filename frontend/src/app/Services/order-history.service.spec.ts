@@ -32,6 +32,23 @@ describe('OrderHistoryService', () => {
     })
   ))
 
+  it('should pass search query params to the api', inject([OrderHistoryService, HttpTestingController],
+    fakeAsync((service: OrderHistoryService, httpMock: HttpTestingController) => {
+      let res
+      service.get('Apple', 'delivered').subscribe((data) => res = data)
+      const req = httpMock.expectOne((request) =>
+        request.url === 'http://localhost:3000/rest/order-history' &&
+        request.params.get('q') === 'Apple' &&
+        request.params.get('status') === 'delivered'
+      )
+      req.flush({ data: 'apiResponse' })
+      tick()
+      expect(req.request.method).toBe('GET')
+      expect(res).toBe('apiResponse')
+      httpMock.verify()
+    })
+  ))
+
   it('should get payment cards directly from the api', inject([OrderHistoryService, HttpTestingController],
     fakeAsync((service: OrderHistoryService, httpMock: HttpTestingController) => {
       let res
