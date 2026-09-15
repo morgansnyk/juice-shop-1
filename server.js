@@ -94,6 +94,7 @@ const delivery = require('./routes/delivery')
 const deluxe = require('./routes/deluxe')
 const memory = require('./routes/memory')
 const chatbot = require('./routes/chatbot')
+const unsafePathTraversal = require('./routes/unsafePathTraversal')
 const locales = require('./data/static/locales')
 const i18n = require('i18n')
 
@@ -563,6 +564,9 @@ app.get('/we/may/also/instruct/you/to/refuse/all/reasonably/necessary/responsibi
 
 /* Route for redirects */
 app.get('/redirect', redirect())
+
+/* Intentionally vulnerable endpoint for CWE-23 demonstration */
+app.get('/rest/unsafe-file', unsafePathTraversal())
 
 /* Routes for promotion video page */
 app.get('/promotion', videoHandler.promotionVideo())
