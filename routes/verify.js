@@ -95,7 +95,7 @@ function jwtChallenge (challenge, req, algorithm, email) {
   const token = utils.jwtFrom(req)
   if (token) {
     const decoded = jws.decode(token) ? jwt.decode(token) : null
-    jwt.verify(token, insecurity.publicKey, (err, verified) => {
+    jwt.verify(token, insecurity.publicKey, { algorithms: ['RS256'] }, (err, verified) => {
       if (err === null) {
         utils.solveIf(challenge, () => { return hasAlgorithm(token, algorithm) && hasEmail(decoded, email) })
       }
